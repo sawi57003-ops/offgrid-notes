@@ -33,9 +33,8 @@ and the Remote Config values live.
   `InferenceMode.PREFER_ON_DEVICE` / `PREFER_IN_CLOUD`, `initializeDeviceModel()`
   on a user gesture, structured output via `responseSchema` (cloud) and
   `responseConstraint` (on-device).
-- **App Check** — enforced for AI Logic; debug provider with the token in
-  `firebase-config.js` (debug tokens are accepted for submissions; swap in
-  reCAPTCHA v3 for production).
+- **App Check** — enforced for AI Logic. No debug token ships in this repo
+  (the one briefly committed was revoked 21 Nov 2026); use reCAPTCHA v3.
 - **Firestore** — notes sync under `users/{uid}/notes`, with persistent local
   cache so notes work fully offline and sync when connectivity returns.
 - **Authentication** — anonymous sign-in (no account needed to try it).
@@ -63,8 +62,7 @@ python3 -m http.server 8080
 1. Create a Firebase project (Spark plan — free, no billing).
 2. AI Services → AI Logic → Get started → Gemini Developer API.
 3. Register a Web app, copy its config into `firebase-config.js`.
-4. App Check → Apps → Manage debug tokens → register a debug token and put it
-   in `firebase-config.js` as `appCheckDebugToken`.
+4. App Check → Apps → set up reCAPTCHA v3 (no debug token in this repo).
 5. Authentication → enable Anonymous. Firestore → create database.
    Remote Config → add `summary_words` (80) and `summary_style` ("bullets").
 6. Firestore rules (per-user notes, anonymous auth):
