@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Offgrid — field notes with hybrid AI</title>
+<meta name="description" content="Offline-first notes. Gemini Nano summarizes on-device when available; the cloud takes over for long documents. Built with Firebase AI Logic hybrid inference.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%237dd87d'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%230f1410'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css">
+<script type="importmap">
+{
+  "imports": {
+    "firebase/app": "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/13.4.0/firebase-auth.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/13.4.0/firebase-firestore.js",
+    "firebase/app-check": "https://www.gstatic.com/firebasejs/13.4.0/firebase-app-check.js",
+    "firebase/remote-config": "https://www.gstatic.com/firebasejs/13.4.0/firebase-remote-config.js",
+    "firebase/ai": "https://www.gstatic.com/firebasejs/13.4.0/firebase-ai.js"
+  }
+}
+</script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="logo">◐</span>
+    <div>
+      <h1>Offgrid</h1>
+      <p class="tagline">Field notes with hybrid AI — on-device first, cloud when it matters.</p>
+    </div>
+  </div>
+  <div class="status-pills">
+    <span id="netPill" class="pill">● checking network…</span>
+    <span id="devicePill" class="pill">● checking on-device AI…</span>
+    <span id="cloudPill" class="pill">● checking cloud…</span>
+  </div>
+</header>
+
+<main class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <input id="search" type="search" placeholder="Search notes…" aria-label="Search notes">
+      <button id="newNoteBtn" class="btn primary">+ New note</button>
+    </div>
+    <ul id="notesList" class="notes-list" aria-label="Notes"></ul>
+    <p class="hint">Notes are stored on this device and synced to Firestore when online. AI runs on-device (Gemini Nano) whenever the device supports it.</p>
+  </aside>
+
+  <section class="editor">
+    <input id="noteTitle" type="text" placeholder="Note title…" aria-label="Note title">
+    <div class="meta"><span id="wordCount">0 words</span> · <span id="saveState">Saved locally</span></div>
+    <textarea id="noteBody" placeholder="Write your field note here… Works in airplane mode. Try the sample notes, then hit Summarize." aria-label="Note body"></textarea>
+
+    <div class="ai-panel">
+      <div class="ai-head">
+        <h2>Hybrid AI</h2>
+        <button id="prepareDeviceBtn" class="btn">Prepare on-device model</button>
+        <span id="deviceProgress" class="progress"></span>
+      </div>
+      <p class="ai-note">Short jobs run on-device first (<strong>PREFER_ON_DEVICE</strong>). Long documents go to the cloud (<strong>PREFER_IN_CLOUD</strong>). Every result shows honestly where it actually ran.</p>
+      <div class="ai-actions">
+        <button id="summarizeBtn" class="btn">Summarize</button>
+        <button id="actionsBtn" class="btn">Extract action items</button>
+        <button id="titleBtn" class="btn">Suggest title</button>
+        <button id="deepdiveBtn" class="btn">Deep dive (cloud)</button>
+      </div>
+      <div id="aiResult" class="ai-result" aria-live="polite">
+        <p class="placeholder">AI output appears here, with a badge showing whether it ran on-device or in the cloud, and how long it took.</p>
+      </div>
+      <div id="tasksWrap" class="tasks" hidden>
+        <h3>Action items</h3>
+        <ul id="tasksList"></ul>
+      </div>
+    </div>
+  </section>
+
+  <aside class="diag">
+    <h2>How the hybrid routing behaves</h2>
+    <dl id="diagList">
+      <dt>On-device model</dt><dd id="diagDevice">checking…</dd>
+      <dt>Network</dt><dd id="diagNet">checking…</dd>
+      <dt>Last inference</dt><dd id="diagLast">none yet</dd>
+      <dt>Cloud model</dt><dd id="diagCloud">gemini-2.5-flash (fallback)</dd>
+      <dt>Summary length</dt><dd id="diagSummary">Remote Config: —</dd>
+      <dt>Sync</dt><dd id="diagSync">local only</dd>
+    </dl>
+    <p class="fineprint">On-device inference uses the Chrome Prompt API (Gemini Nano, Chrome 139+ desktop, flag <code>#prompt-api-for-gemini-nano-multimodal-input</code>). If the device has no on-device model, the Firebase AI Logic SDK falls back to the cloud model automatically. The badge above each result comes from <code>response.inferenceSource</code> — it reports what really ran, never a guess.</p>
+  </aside>
+</main>
+
+<footer class="foot">
+  <p>Offgrid — built for #BuildHybridAI 2026 with Firebase AI Logic (hybrid inference), Firestore, Auth (anonymous), Remote Config and App Check. Free Spark plan, no billing.</p>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
