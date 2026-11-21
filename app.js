@@ -14,7 +14,7 @@ import { getRemoteConfig, fetchAndActivate, getString, getNumber } from "firebas
 import {
   getAI, getGenerativeModel, GoogleAIBackend, InferenceMode, Schema,
 } from "firebase/ai";
-import { firebaseConfig, appCheckDebugToken } from "./firebase-config.js";
+import { firebaseConfig } from "./firebase-config.js";
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -74,10 +74,6 @@ async function initFirebase() {
   }
   try {
     const app = initializeApp(firebaseConfig);
-    if (appCheckDebugToken) {
-      // Debug provider for local dev / submission judging (rules accept debug tokens).
-      self.FIREBASE_APPCHECK_DEBUG_TOKEN = appCheckDebugToken;
-    }
     initializeAppCheck(app, { isTokenAutoRefreshEnabled: true });
     const auth = getAuth(app);
     const db = initializeFirestore(app, {
