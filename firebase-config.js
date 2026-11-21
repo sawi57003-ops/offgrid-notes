@@ -14,7 +14,6 @@ export const firebaseConfig = {
   appId: "1:521676222647:web:146efe6a3e84d7cabb9d32",
 };
 
-// App Check debug token registered in the Firebase console for this project
-// (App Check > Apps > Manage debug tokens). Debug tokens are accepted for
-// #BuildHybridAI submissions. Replace with reCAPTCHA v3 for production.
-export const appCheckDebugToken = "ce444219-5f0a-4034-b658-a4366a7a3bd5";
+// App Check debug token REVOKED 21 Nov 2026 (it was committed to the public
+// repo by mistake). No debug token ships in this repo. For a working demo,
+// register reCAPTCHA v3 in App Check instead.
