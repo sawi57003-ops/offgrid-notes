@@ -2,17 +2,16 @@
 // The apiKey below is a public client identifier (Firebase web apps ship it
 // in client code by design). It is NOT a private key. Abuse is prevented by
 // Firebase App Check (enforced) + Firestore security rules (see README).
-// HOW TO FILL IN: Firebase console > Project settings > Your apps > Web app.
-// The browser task that created the project fills this file in; until then
-// the app runs in local-only mode (notes + UI work, AI disabled).
+// Project "offgrid-notes" created 21 Nov 2026 (Spark FREE, no billing, no Analytics).
+// AI Logic: Gemini Developer API (free). Firestore: asia-southeast1 (test mode, 30 days).
 
 export const firebaseConfig = {
-  apiKey: "PASTE_API_KEY_HERE",
-  authDomain: "PASTE_AUTH_DOMAIN_HERE",
-  projectId: "PASTE_PROJECT_ID_HERE",
-  storageBucket: "PASTE_STORAGE_BUCKET_HERE",
-  messagingSenderId: "PASTE_MESSAGING_SENDER_ID_HERE",
-  appId: "PASTE_APP_ID_HERE",
+  apiKey: "AIzaSyDCo28fdaFrbSTOrk-i4h-2VFPQEb6qQD0",
+  authDomain: "offgrid-notes.firebaseapp.com",
+  projectId: "offgrid-notes",
+  storageBucket: "offgrid-notes.firebasestorage.app",
+  messagingSenderId: "521676222647",
+  appId: "1:521676222647:web:146efe6a3e84d7cabb9d32",
 };
 
 // App Check debug token registered in the Firebase console for this project
