@@ -263,6 +263,9 @@ async function runAI(kind, prompt, { stream = false } = {}) {
       text = res.response.text(); source = res.response.inferenceSource;
     }
     const ms = Math.round(performance.now() - t0);
+    // The SDK reports inferenceSource in lowercase ("in_cloud"/"on_device");
+    // normalize once so badges, diagnostics and saved notes all agree.
+    source = String(source || "").toUpperCase();
     note.ai = { kind, source, latencyMs: ms, at: Date.now() };
     els.diagLast.textContent = `${kind}: ${source} in ${ms} ms (${navigator.onLine ? "online" : "offline"})`;
     if (kind === "actions") {
