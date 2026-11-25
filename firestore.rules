@@ -1,0 +1,14 @@
+rules_version = '2';
+
+// Offgrid — Firestore security rules.
+// Data model: each anonymous user keeps their notes at
+// users/{uid}/notes/{noteId}. A user may read/write ONLY their own notes.
+// Nothing else in the database is readable or writable.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/notes/{noteId} {
+      allow read, write: if request.auth != null
+        && request.auth.uid == userId;
+    }
+  }
+}
