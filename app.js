@@ -254,11 +254,11 @@ async function runAI(kind, prompt, { stream = false } = {}) {
       const final = await res.response;
       text = final.text(); source = final.inferenceSource;
     } else {
-      // Never hang the UI forever: fail honestly after 60 s if the model
-      // call stalls (e.g. an on-device download that never finishes).
+      // Never hang the UI forever: fail honestly after 150 s if the model
+      // call stalls (automated browsers can take 60-120 s for a first call).
       const res = await Promise.race([
         model.generateContent(prompt),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("AI request timed out after 60 s — please try again.")), 60000)),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("AI request timed out after 150 s — please try again.")), 150000)),
       ]);
       text = res.response.text(); source = res.response.inferenceSource;
     }
@@ -392,8 +392,7 @@ els.summarize.addEventListener("click", () => {
   const n = activeNote(); if (!n?.body.trim()) return;
   const p = summaryParams();
   runAI("summarize",
-    `Summarize the following field note in ${p.words} words or fewer, as ${p.style}. Keep facts, names, dates and numbers exact. Note:\n\n${n.body}`,
-    { stream: true });
+    `Summarize the following field note in ${p.words} words or fewer, as ${p.style}. Keep facts, names, dates and numbers exact. Note:\n\n${n.body}`);
 });
 els.actions.addEventListener("click", () => {
   const n = activeNote(); if (!n?.body.trim()) return;
@@ -407,8 +406,7 @@ els.titleBtn.addEventListener("click", () => {
 els.deepdive.addEventListener("click", () => {
   const n = activeNote(); if (!n?.body.trim()) return;
   runAI("deepdive",
-    `Turn this short note into a detailed brief with sections: Background, Key points, Open questions, Next steps. Use only facts from the note; mark anything inferred as "inferred". Note:\n\n${n.body}`,
-    { stream: true });
+    `Turn this short note into a detailed brief with sections: Background, Key points, Open questions, Next steps. Use only facts from the note; mark anything inferred as "inferred". Note:\n\n${n.body}`);
 });
 
 // ---------- Boot ----------
