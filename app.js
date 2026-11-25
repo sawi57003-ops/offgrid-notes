@@ -155,7 +155,7 @@ function summaryParams() {
 function getModel(kind) {
   if (!fb) throw new Error("Firebase is not configured — add firebase-config.js first.");
   if (models[kind]) return models[kind];
-  const cloudModel = "gemini-2.5-flash";
+  const cloudModel = "gemini-3.8-flash";
   if (kind === "deepdive") {
     models[kind] = getGenerativeModel(fb.ai, {
       mode: InferenceMode.PREFER_IN_CLOUD,
@@ -191,8 +191,16 @@ async function ensureDeviceModel(model) {
   await model.initializeDeviceModel((p) => {
     els.progress.textContent = `Downloading on-device model: ${Math.round(p * 100)}%`;
   });
+  // initializeDeviceModel can resolve even when no on-device model is usable
+  // on this device, so only claim readiness after verifying availability.
+  let avail = "unknown";
+  try {
+    if (typeof LanguageModel !== "undefined") avail = await LanguageModel.availability();
+  } catch { /* keep "unknown" */ }
   deviceReady = true;
-  els.progress.textContent = "On-device model ready.";
+  els.progress.textContent = avail === "available"
+    ? "On-device model ready."
+    : `On-device model ${avail} on this device — cloud fallback will be used.`;
   checkDevice();
 }
 
