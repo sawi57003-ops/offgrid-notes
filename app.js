@@ -9,12 +9,17 @@ import {
   getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot,
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
 } from "firebase/firestore";
-import { initializeAppCheck } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 import { getRemoteConfig, fetchAndActivate, getString, getNumber } from "firebase/remote-config";
 import {
   getAI, getGenerativeModel, GoogleAIBackend, InferenceMode, Schema,
 } from "firebase/ai";
 import { firebaseConfig } from "./firebase-config.js";
+
+// reCAPTCHA site key (public by design, like the Firebase apiKey).
+// Score-based key created 26 Nov 2026 in Google Cloud Console, registered in
+// Firebase Console > App Check as "Fraud Defense" (reCAPTCHA Enterprise).
+const RECAPTCHA_SITE_KEY = "6LdKSzEuAAAAALHxsn9J4DJfsb-32Wvaax2FeUG6";
 
 const $ = (id) => document.getElementById(id);
 const els = {
@@ -74,7 +79,10 @@ async function initFirebase() {
   }
   try {
     const app = initializeApp(firebaseConfig);
-    initializeAppCheck(app, { isTokenAutoRefreshEnabled: true });
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
+      isTokenAutoRefreshEnabled: true,
+    });
     const auth = getAuth(app);
     const db = initializeFirestore(app, {
       localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
