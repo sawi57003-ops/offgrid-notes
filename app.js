@@ -152,13 +152,24 @@ function summaryParams() {
   };
 }
 
-function getModel(kind) {
+async function deviceAvail() {
+  try {
+    if (typeof LanguageModel === "undefined") return "unavailable";
+    return await LanguageModel.availability();
+  } catch { return "unknown"; }
+}
+
+function getModel(kind, cloudOnly = false) {
   if (!fb) throw new Error("Firebase is not configured — add firebase-config.js first.");
-  if (models[kind]) return models[kind];
+  const key = cloudOnly ? `${kind}:cloud` : kind;
+  if (models[key]) return models[key];
   const cloudModel = "gemini-3.8-flash";
+  // When on-device is unavailable, route straight to the cloud instead of
+  // letting the SDK wait on an on-device model that can never load here.
+  const mode = cloudOnly || kind === "deepdive" ? InferenceMode.PREFER_IN_CLOUD : InferenceMode.PREFER_ON_DEVICE;
   if (kind === "deepdive") {
-    models[kind] = getGenerativeModel(fb.ai, {
-      mode: InferenceMode.PREFER_IN_CLOUD,
+    models[key] = getGenerativeModel(fb.ai, {
+      mode,
       inCloudParams: { model: cloudModel, generationConfig: { maxOutputTokens: 1200 } },
       onDeviceParams: { createOptions: { expectedInputs: [{ type: "text", languages: ["en"] }], expectedOutputs: [{ type: "text", languages: ["en"] }] } },
     });
@@ -166,8 +177,8 @@ function getModel(kind) {
     const schema = Schema.object({
       properties: { items: Schema.array({ items: Schema.object({ properties: { text: Schema.string() } }) }) },
     });
-    models[kind] = getGenerativeModel(fb.ai, {
-      mode: InferenceMode.PREFER_ON_DEVICE,
+    models[key] = getGenerativeModel(fb.ai, {
+      mode,
       inCloudParams: {
         model: cloudModel,
         generationConfig: { responseMimeType: "application/json", responseSchema: schema },
@@ -175,13 +186,13 @@ function getModel(kind) {
       onDeviceParams: { promptOptions: { responseConstraint: schema } },
     });
   } else {
-    models[kind] = getGenerativeModel(fb.ai, {
-      mode: InferenceMode.PREFER_ON_DEVICE,
+    models[key] = getGenerativeModel(fb.ai, {
+      mode,
       inCloudParams: { model: cloudModel, generationConfig: { maxOutputTokens: 600 } },
       onDeviceParams: { createOptions: { expectedInputs: [{ type: "text", languages: ["en"] }], expectedOutputs: [{ type: "text", languages: ["en"] }] } },
     });
   }
-  return models[kind];
+  return models[key];
 }
 
 async function ensureDeviceModel(model) {
@@ -222,11 +233,15 @@ async function runAI(kind, prompt, { stream = false } = {}) {
   }
   const btn = { summarize: els.summarize, actions: els.actions, title: els.titleBtn, deepdive: els.deepdive }[kind];
   btn.disabled = true; btn.classList.add("busy");
-  els.result.innerHTML = `<p class="placeholder">Thinking… ${kind === "deepdive" ? "long document — routing to the cloud." : "trying on-device first, cloud fallback if needed."}</p>`;
   const t0 = performance.now();
+  // Route honestly: only attempt the on-device model when this browser can
+  // actually run it; otherwise go straight to the cloud (the badge shows it).
+  const avail = kind === "deepdive" ? "available" : await deviceAvail();
+  const cloudOnly = kind !== "deepdive" && avail !== "available";
+  els.result.innerHTML = `<p class="placeholder">Thinking… ${cloudOnly ? "on-device unavailable here — routing to the cloud." : kind === "deepdive" ? "long document — routing to the cloud." : "trying on-device first, cloud fallback if needed."}</p>`;
   try {
-    const model = getModel(kind);
-    if (kind !== "deepdive") await ensureDeviceModel(model);
+    const model = getModel(kind, cloudOnly);
+    if (!cloudOnly && kind !== "deepdive") await ensureDeviceModel(model);
     let text, source;
     if (stream) {
       const res = await model.generateContentStream(prompt);
@@ -239,7 +254,12 @@ async function runAI(kind, prompt, { stream = false } = {}) {
       const final = await res.response;
       text = final.text(); source = final.inferenceSource;
     } else {
-      const res = await model.generateContent(prompt);
+      // Never hang the UI forever: fail honestly after 60 s if the model
+      // call stalls (e.g. an on-device download that never finishes).
+      const res = await Promise.race([
+        model.generateContent(prompt),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("AI request timed out after 60 s — please try again.")), 60000)),
+      ]);
       text = res.response.text(); source = res.response.inferenceSource;
     }
     const ms = Math.round(performance.now() - t0);
